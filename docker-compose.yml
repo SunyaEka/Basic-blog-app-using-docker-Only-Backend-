@@ -1,0 +1,31 @@
+version: '3'
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - node-app
+  node-app:
+    build: .
+    environment:
+      - PORT=3000
+      # As docker execute container parallely, we can get some issues so to run in sequence we can use depends_on. But it doesn't check if the container fully up
+      # But in our case we have handle this as we used mongoose which retry connection for 30s which are enough for us. or we can set timeOut in catch block
+    depends_on:
+      - mongo
+      - redis
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=blogger
+      - MONGO_INITDB_ROOT_PASSWORD=blog2022
+    volumes:
+    # volume_name:path_of_volume
+      - mongo_db:/data/db
+  redis:
+    image: redis
+volumes:
+  mongo_db:
